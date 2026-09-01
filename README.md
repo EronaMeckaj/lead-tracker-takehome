@@ -1,8 +1,12 @@
-# Take-Home: Mini Lead Tracker
+# Take-Home Challenge: Lead Tracker
 
-Build and deploy a small, full-stack lead tracker. We're looking for a working
-vertical slice, not a finished product. Aim for **6–8 focused hours** — if
-you're going well past that, cut scope and note it in your README.
+Build and deploy a full-stack lead tracker. We're looking for a tightly scoped,
+real application — deployed, working, and built the way you'd build for
+production.
+
+We respect your time: aim for **6–8 focused hours**. If you're going well past
+that, cut scope and tell us what you'd have done next — honest scoping is part
+of what we're evaluating.
 
 ## What to build
 
@@ -44,7 +48,7 @@ you're going well past that, cut scope and note it in your README.
 - Sensible data model and API design.
 - Real (not decorative) use of Postgres and Valkey.
 - Clear README and reasonable git history.
-- Honest scoping — a small thing done well beats a big thing half-done.
+- Honest scoping — a tight scope done well beats a broad scope half-done.
 
 ## Questions?
 
