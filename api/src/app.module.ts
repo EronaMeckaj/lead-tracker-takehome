@@ -8,6 +8,7 @@ import { dataSourceOptions } from './data-source.js';
 import { LeadsModule } from './leads/leads.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { UsersModule } from './users/users.module.js';
+import { WebhooksModule } from './webhooks/webhooks.module.js';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsersModule } from './users/users.module.js';
     UsersModule,
     AuthModule,
     LeadsModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
