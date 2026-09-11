@@ -1,7 +1,16 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { LeadStage } from '../entities/lead.entity.js';
 
 export class QueryLeadsDto {
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @IsOptional()
+  @IsEnum(LeadStage)
+  stage?: LeadStage;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()

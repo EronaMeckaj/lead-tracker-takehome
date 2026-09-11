@@ -22,12 +22,23 @@ export class LeadsService {
   }
 
   async findAll(query: QueryLeadsDto): Promise<PaginatedLeads> {
-    const { page, limit } = query;
-    const [data, total] = await this.leadsRepository.findAndCount({
-      order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const { q, stage, page, limit } = query;
+    const qb = this.leadsRepository.createQueryBuilder('lead');
+
+    if (stage) {
+      qb.andWhere('lead.stage = :stage', { stage });
+    }
+    if (q) {
+      qb.andWhere('(lead.name ILIKE :q OR lead.email ILIKE :q OR lead.message ILIKE :q)', {
+        q: `%${q}%`,
+      });
+    }
+
+    qb.orderBy('lead.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
     return { data, total, page, limit };
   }
 }
