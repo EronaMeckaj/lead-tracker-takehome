@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
 import { QueryLeadsDto } from './dto/query-leads.dto.js';
-import { Lead, LeadSource } from './entities/lead.entity.js';
+import { Lead, LeadSource, LeadStage } from './entities/lead.entity.js';
 
 export interface PaginatedLeads {
   data: Lead[];
@@ -40,5 +40,14 @@ export class LeadsService {
 
     const [data, total] = await qb.getManyAndCount();
     return { data, total, page, limit };
+  }
+
+  async updateStage(id: string, stage: LeadStage): Promise<Lead> {
+    const lead = await this.leadsRepository.findOneBy({ id });
+    if (!lead) {
+      throw new NotFoundException(`Lead ${id} not found`);
+    }
+    lead.stage = stage;
+    return this.leadsRepository.save(lead);
   }
 }

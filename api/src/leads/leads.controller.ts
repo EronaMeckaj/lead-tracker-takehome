@@ -1,6 +1,16 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
 import { QueryLeadsDto } from './dto/query-leads.dto.js';
+import { UpdateLeadStageDto } from './dto/update-lead-stage.dto.js';
 import { LeadSource } from './entities/lead.entity.js';
 import { LeadsService } from './leads.service.js';
 
@@ -16,5 +26,10 @@ export class LeadsController {
   @Get()
   findAll(@Query() query: QueryLeadsDto) {
     return this.leadsService.findAll(query);
+  }
+
+  @Patch(':id/stage')
+  updateStage(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateLeadStageDto) {
+    return this.leadsService.updateStage(id, dto.stage);
   }
 }
