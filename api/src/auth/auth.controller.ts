@@ -2,6 +2,8 @@ import { Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/co
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request, Response } from 'express';
+import { User } from '../users/entities/user.entity.js';
+import { SessionAuthGuard } from './session-auth.guard.js';
 
 @Controller('auth')
 export class AuthController {
@@ -17,6 +19,12 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   googleCallback(@Res() res: Response): void {
     res.redirect(`${this.configService.getOrThrow<string>('FRONTEND_URL')}/dashboard`);
+  }
+
+  @Get('me')
+  @UseGuards(SessionAuthGuard)
+  me(@Req() req: Request): User {
+    return req.user as User;
   }
 
   @HttpCode(200)
