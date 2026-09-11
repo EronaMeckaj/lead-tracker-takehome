@@ -39,6 +39,10 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      # Comma-separated allowlist — set this, or any Google account can
+      # sign in to the dashboard. Never committed.
+      - key: ALLOWED_EMAILS
+        sync: false
       # Fill in with this service's real onrender.com URL after first deploy.
       - key: GOOGLE_CALLBACK_URL
         value: https://lead-tracker-api.onrender.com/api/auth/google/callback
