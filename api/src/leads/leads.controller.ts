@@ -7,11 +7,14 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { SessionAuthGuard } from '../auth/session-auth.guard.js';
 import { RateLimit } from '../rate-limit/rate-limit.decorator.js';
 import { RateLimitGuard } from '../rate-limit/rate-limit.guard.js';
+import { csvHeaderRow, createCsvRowTransform } from './csv-transform.js';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
 import { QueryLeadsDto } from './dto/query-leads.dto.js';
 import { UpdateLeadStageDto } from './dto/update-lead-stage.dto.js';
@@ -39,5 +42,16 @@ export class LeadsController {
   @UseGuards(SessionAuthGuard)
   updateStage(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateLeadStageDto) {
     return this.leadsService.updateStage(id, dto.stage);
+  }
+
+  @Get('export.csv')
+  @UseGuards(SessionAuthGuard)
+  async exportCsv(@Res() res: Response): Promise<void> {
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="leads.csv"');
+    res.write(csvHeaderRow());
+
+    const rows = await this.leadsService.streamAll();
+    rows.pipe(createCsvRowTransform()).pipe(res);
   }
 }
