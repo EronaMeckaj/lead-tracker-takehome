@@ -1,6 +1,6 @@
-// apiUrl is filled in with the real deployed API URL during the
-// chore/deploy phase, once the Render service exists.
+// Matches the API's service name in render.yaml. If the Render service
+// ends up with a different auto-assigned URL, update this to match.
 export const environment = {
   production: true,
-  apiUrl: 'https://REPLACE_WITH_RENDER_API_URL/api',
+  apiUrl: 'https://lead-tracker-api.onrender.com/api',
 };
