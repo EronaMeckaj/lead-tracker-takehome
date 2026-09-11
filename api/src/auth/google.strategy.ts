@@ -8,7 +8,7 @@ import { UsersService } from '../users/users.service.js';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
-    configService: ConfigService,
+    private readonly configService: ConfigService,
     private readonly usersService: UsersService,
   ) {
     super({
@@ -31,6 +31,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       return;
     }
 
+    if (!this.isAllowed(email)) {
+      done(new Error('This Google account is not allowed to access the dashboard'));
+      return;
+    }
+
     const user: User = await this.usersService.findOrCreateFromGoogle({
       googleId: profile.id,
       email,
@@ -38,5 +43,19 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       avatarUrl: profile.photos?.[0]?.value ?? null,
     });
     done(null, user);
+  }
+
+  /**
+   * ALLOWED_EMAILS unset means "allow any Google account" — convenient
+   * for local dev, but it must be set before a real deploy, since
+   * otherwise anyone with a Google account can sign in to the dashboard.
+   */
+  private isAllowed(email: string): boolean {
+    const allowList = this.configService.get<string>('ALLOWED_EMAILS');
+    if (!allowList) {
+      return true;
+    }
+    const emails = allowList.split(',').map((entry) => entry.trim().toLowerCase());
+    return emails.includes(email.toLowerCase());
   }
 }
