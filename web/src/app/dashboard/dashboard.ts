@@ -30,6 +30,7 @@ export class Dashboard implements OnInit {
   protected readonly stageFilter = signal<LeadStage | ''>('');
   protected readonly loading = signal(false);
   protected readonly error = signal('');
+  protected readonly exportCsvUrl = this.leadsApi.exportCsvUrl();
 
   private q = '';
 
