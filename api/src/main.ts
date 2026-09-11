@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { RedisStore } from 'connect-redis';
 import session from 'express-session';
 import passport from 'passport';
@@ -9,9 +10,14 @@ import { AppModule } from './app.module.js';
 import { REDIS_CLIENT } from './redis/redis.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   const isProduction = configService.get('NODE_ENV') === 'production';
+
+  // Render sits in front of the app as a reverse proxy; without this,
+  // every request's req.ip is the proxy's address, and per-IP rate
+  // limiting collapses onto a single shared bucket.
+  app.set('trust proxy', 1);
 
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
