@@ -4,7 +4,9 @@
       <a class="nav-brand" routerLink="/">Lead Tracker</a>
 
       @if (auth.isAuthenticated()) {
-        <a routerLink="/dashboard">Dashboard</a>
+        @if (!onDashboard()) {
+          <a routerLink="/dashboard">Dashboard</a>
+        }
         <button type="button" class="btn btn-ghost" (click)="signOut()">Sign out</button>
       } @else {
         <a class="nav-cta" routerLink="/login">Login</a>

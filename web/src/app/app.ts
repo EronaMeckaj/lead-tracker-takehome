@@ -27,6 +27,9 @@ export class App implements OnInit {
   /** The login screen is a full-viewport split takeover with no chrome. */
   protected readonly showNav = computed(() => !this.url().startsWith('/login'));
 
+  /** No point linking to the page you're already on. */
+  protected readonly onDashboard = computed(() => this.url().startsWith('/dashboard'));
+
   ngOnInit(): void {
     // Populates the nav's auth state on every page, not just the
     // dashboard (which already checks this itself via authGuard).
