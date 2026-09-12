@@ -15,7 +15,12 @@ services:
     runtime: node
     plan: free
     rootDir: api
-    buildCommand: npm install && npm run build && npm run migration:run:prod
+    # NODE_ENV=production (set below) is visible during the build too, and
+    # a plain `npm install` respects it by skipping devDependencies - which
+    # is where @nestjs/cli and typescript live, both required by `nest
+    # build`. --include=dev overrides that; NODE_ENV=production still
+    # takes effect for the running app via start:prod.
+    buildCommand: npm install --include=dev && npm run build && npm run migration:run:prod
     startCommand: npm run start:prod
     healthCheckPath: /api/health
     envVars:
@@ -49,10 +54,10 @@ services:
       # sign in to the dashboard. Never committed.
       - key: ALLOWED_EMAILS
         sync: false
-      # Confirmed against the real deployed service - this name didn't
-      # collide, so it got the plain onrender.com URL with no suffix.
+      # Confirmed against the real deployed service - the plain name
+      # collided, so Render assigned a random suffix.
       - key: GOOGLE_CALLBACK_URL
-        value: https://lead-tracker-api.onrender.com/api/auth/google/callback
+        value: https://lead-tracker-api-p27s.onrender.com/api/auth/google/callback
       - key: FRONTEND_URL
         value: https://lead-tracker-web-t370.onrender.com
 
