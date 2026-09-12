@@ -1,6 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { CdkDragDrop, DragDropModule, transferArrayItem } from '@angular/cdk/drag-drop';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { MatFormField, MatLabel, MatPrefix } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Lead, LeadStage, Leads } from '../leads/leads';
 
@@ -12,7 +15,7 @@ type Columns = Record<LeadStage, Lead[]>;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DragDropModule, DatePipe],
+  imports: [DragDropModule, DatePipe, MatFormField, MatLabel, MatInput, MatIcon, MatPrefix],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
