@@ -1,18 +1,16 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButton } from '@angular/material/button';
-import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
 import { environment } from '../../environments/environment';
 
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 @Component({
   selector: 'app-public-form',
-  imports: [ReactiveFormsModule, MatFormField, MatLabel, MatError, MatInput, MatButton],
+  imports: [ReactiveFormsModule],
   templateUrl: './public-form.html',
   styleUrl: './public-form.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PublicForm {
   private readonly fb = inject(FormBuilder);
@@ -26,6 +24,7 @@ export class PublicForm {
 
   protected readonly status = signal<SubmitStatus>('idle');
   protected readonly errorMessage = signal('');
+  protected readonly sentName = signal('');
 
   submit(): void {
     if (this.form.invalid) {
@@ -36,9 +35,12 @@ export class PublicForm {
     this.status.set('submitting');
     this.errorMessage.set('');
 
-    this.http.post(`${environment.apiUrl}/leads`, this.form.getRawValue()).subscribe({
+    const { name, email, message } = this.form.getRawValue();
+
+    this.http.post(`${environment.apiUrl}/leads`, { name, email, message }).subscribe({
       next: () => {
         this.status.set('success');
+        this.sentName.set(name.split(' ')[0]);
         this.form.reset();
       },
       error: (err: HttpErrorResponse) => {
@@ -50,5 +52,9 @@ export class PublicForm {
         );
       },
     });
+  }
+
+  resetForm(): void {
+    this.status.set('idle');
   }
 }

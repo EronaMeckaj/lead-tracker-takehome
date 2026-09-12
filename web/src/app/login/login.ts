@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Auth } from '../auth/auth';
 
 @Component({
@@ -6,6 +6,7 @@ import { Auth } from '../auth/auth';
   imports: [],
   templateUrl: './login.html',
   styleUrl: './login.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Login {
   private readonly auth = inject(Auth);
