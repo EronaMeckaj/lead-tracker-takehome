@@ -5,7 +5,8 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Lead, LeadStage, Leads } from '../leads/leads';
 
 const STAGES: LeadStage[] = ['new', 'contacted', 'closed'];
-const BOARD_LIMIT = 200;
+// Matches the API's @Max(100) on QueryLeadsDto.limit (src/leads/dto/query-leads.dto.ts).
+const BOARD_LIMIT = 100;
 
 type Columns = Record<LeadStage, Lead[]>;
 
