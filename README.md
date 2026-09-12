@@ -10,6 +10,16 @@ Contacted → Closed) from a dashboard.
 
 See [`CLAUDE.md`](./CLAUDE.md) for architecture and conventions.
 
+## Live
+
+- **App**: https://lead-tracker-web-t370.onrender.com
+- **API**: https://lead-tracker-api-p27s.onrender.com/api (health check at `/api/health`)
+
+Verified directly against this deployment: submitting a lead through the
+public form, signing in with Google, moving a lead through pipeline
+stages (both the board's drag-and-drop and the list view's dropdown),
+and downloading the CSV export.
+
 ## Running it locally
 
 Requires Docker, and Node 20+ for both apps.
@@ -54,8 +64,10 @@ The dashboard's only login is Google. To get a client ID/secret:
 5. Set `ALLOWED_EMAILS` in `api/.env` to your own email (comma-separate
    more if needed) — anyone who completes the OAuth flow is only let into
    the dashboard if their email is on this list. Leave it unset and any
-   Google account can sign in, which is fine for a first local test but
-   not for anything actually deployed.
+   Google account can sign in. The live deployment above intentionally
+   leaves it unset, so it can actually be evaluated by an account this
+   repo doesn't know in advance — set it once that's no longer a
+   concern.
 
 ### Trying the webhook and rate limiting
 
@@ -78,27 +90,56 @@ done
 
 [`render.yaml`](./render.yaml) is a Render Blueprint covering the whole
 stack: the API as a Node web service, a free Postgres database, a free Key
-Value (Valkey) instance, and the Angular build as a static site.
+Value (Valkey) instance, and the Angular build as a static site. This is
+a record of what it actually took to get it live, not just the intended
+steps — three things broke on the first real deploy, all fixed in
+`render.yaml` now so they shouldn't recur:
 
 1. Push this repo to GitHub, then in Render: **New → Blueprint**, point it
    at the repo. Render reads `render.yaml` and provisions all four
    resources.
-2. In the API service's environment settings, fill in `GOOGLE_CLIENT_ID`,
-   `GOOGLE_CLIENT_SECRET`, and `ALLOWED_EMAILS` (all left blank in the
-   blueprint on purpose — never committed, and the dashboard is wide open
-   to any Google account until `ALLOWED_EMAILS` is set).
-3. Once the API and static site have their real `onrender.com` URLs,
-   update:
+2. **Fill in the blank secrets when Render prompts for them**:
+   `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (left blank in the
+   blueprint on purpose — never committed). Leave `ALLOWED_EMAILS` empty
+   unless you want to restrict sign-in immediately (unset means any
+   Google account can sign in — see the OAuth section above). **Gotcha
+   we hit**: if this step gets skipped, the API doesn't fail to build —
+   it builds fine and then crashes on boot with `Configuration key
+   "GOOGLE_CLIENT_ID" does not exist`. If that happens, check the
+   service's Environment tab; the sync-false fields may simply never
+   have been saved.
+3. **Don't assume the plain service names from `render.yaml` are what
+   you actually got.** If `lead-tracker-api` or `lead-tracker-web` are
+   already taken account-wide, Render silently appends a random suffix —
+   ours came out as `lead-tracker-api-p27s` and `lead-tracker-web-t370`.
+   Check each service's real URL before wiring anything else together.
+4. With the real URLs in hand, update:
    - `GOOGLE_CALLBACK_URL` and `FRONTEND_URL` on the API service to match,
-   - the matching redirect URI on the Google OAuth client,
+   - the matching redirect URI on the Google OAuth client — an exact
+     match, scheme included; a mismatch here fails at Google's own
+     consent screen with `redirect_uri_mismatch`, not an app error,
    - `apiUrl` in `web/src/environments/environment.prod.ts` to match the
      API's URL, then push (Render redeploys the static site on push).
-4. Redeploy the API service so the updated env vars take effect.
+5. Redeploy the API service so the updated env vars take effect.
+
+Two build-time issues, both already fixed in the checked-in
+`render.yaml`:
+
+- **Node version.** Render's default build image didn't satisfy the
+  Angular CLI's minimum supported version. Both services now pin
+  `NODE_VERSION` explicitly to match local dev (`22.22.3`).
+- **Dev dependencies during the build.** `NODE_ENV=production` (needed
+  at runtime) is also visible during the build step, and a plain `npm
+  install` respects it by skipping `devDependencies` — which is exactly
+  where `@nestjs/cli` and `typescript` live. `nest build` needs both, so
+  the API's build failed outright with `nest: not found` until the
+  build command explicitly forced dev deps in
+  (`npm install --include=dev`).
 
 `SESSION_SECRET` and `WEBHOOK_SECRET` are generated automatically by
 Render (`generateValue: true`) — no need to set those by hand.
 
-## Notable decisions
+## Decisions and trade-offs
 
 - **Sessions, not JWT.** The dashboard is small and trusted; a session
   lets access be revoked server-side (delete the Redis key) rather than
@@ -113,7 +154,7 @@ Render (`generateValue: true`) — no need to set those by hand.
   rate limiting — not asked for explicitly, but a public ingestion
   endpoint with zero auth is an easy abuse vector.
 
-## What I'd do next
+## What I'd do next / improve with more time
 
 - Full-text/trigram search (`pg_trgm`) instead of plain `ILIKE` — fine at
   this scale, wouldn't be at real volume.
@@ -125,9 +166,6 @@ Render (`generateValue: true`) — no need to set those by hand.
   overridden rather than a live OAuth round trip, since that can't be
   automated without real Google credentials in CI. The guard's own
   reject-when-anonymous behavior is covered separately, unmocked.
-- Real end-to-end verification against deployed infra with a live Google
-  test account, beyond the build/test/manual-smoke-check level this was
-  verified at during development.
 - A managed allowlist (admin UI + DB table) instead of a comma-separated
   `ALLOWED_EMAILS` env var — fine for a small fixed team, not for one
   that changes often.
