@@ -49,12 +49,12 @@ services:
       # sign in to the dashboard. Never committed.
       - key: ALLOWED_EMAILS
         sync: false
-      # Fill in with this service's real onrender.com URL after first deploy.
+      # Confirmed against the real deployed service - this name didn't
+      # collide, so it got the plain onrender.com URL with no suffix.
       - key: GOOGLE_CALLBACK_URL
         value: https://lead-tracker-api.onrender.com/api/auth/google/callback
-      # Fill in with the static site's real onrender.com URL after first deploy.
       - key: FRONTEND_URL
-        value: https://lead-tracker-web.onrender.com
+        value: https://lead-tracker-web-t370.onrender.com
 
   - type: web
     name: lead-tracker-web
