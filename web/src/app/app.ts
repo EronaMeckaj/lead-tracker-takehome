@@ -1,9 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { MatButton } from '@angular/material/button';
+import { MatToolbar } from '@angular/material/toolbar';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { Auth } from './auth/auth';
+import { ThemeToggle } from './theme/theme-toggle';
 
 @Component({
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, MatToolbar, MatButton, ThemeToggle],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',

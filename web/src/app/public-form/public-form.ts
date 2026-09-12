@@ -1,13 +1,16 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButton } from '@angular/material/button';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 import { environment } from '../../environments/environment';
 
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 @Component({
   selector: 'app-public-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, MatFormField, MatLabel, MatError, MatInput, MatButton],
   templateUrl: './public-form.html',
   styleUrl: './public-form.css',
 })

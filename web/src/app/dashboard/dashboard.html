@@ -1,11 +1,14 @@
 <section class="dashboard">
   <div class="toolbar">
-    <input
-      type="search"
-      placeholder="Search name, email, or message…"
-      (input)="onSearchInput($any($event.target).value)"
-    />
-    <a class="export-link" [href]="exportCsvUrl">Export CSV</a>
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <mat-label>Search name, email, or message</mat-label>
+      <input matInput (input)="onSearchInput($any($event.target).value)" />
+    </mat-form-field>
+    <a class="export-link" [href]="exportCsvUrl">
+      <mat-icon inline>download</mat-icon>
+      Export CSV
+    </a>
   </div>
 
   @if (error()) {
@@ -30,15 +33,18 @@
         >
           @for (lead of columns()[stage]; track lead.id) {
             <div class="lead-card" cdkDrag>
-              <div class="lead-card-header">
-                <span class="lead-name">{{ lead.name }}</span>
-                <span class="lead-source" [class.webhook]="lead.source === 'webhook'">
-                  {{ lead.source }}
-                </span>
+              <div class="lead-card-accent"></div>
+              <div class="lead-card-body">
+                <div class="lead-card-header">
+                  <span class="lead-name">{{ lead.name }}</span>
+                  <span class="lead-source" [class.webhook]="lead.source === 'webhook'">
+                    {{ lead.source }}
+                  </span>
+                </div>
+                <div class="lead-email">{{ lead.email }}</div>
+                <p class="lead-message">{{ lead.message }}</p>
+                <div class="lead-date">{{ lead.createdAt | date: 'MMM d, y' }}</div>
               </div>
-              <div class="lead-email">{{ lead.email }}</div>
-              <p class="lead-message">{{ lead.message }}</p>
-              <div class="lead-date">{{ lead.createdAt | date: 'MMM d, y' }}</div>
             </div>
           } @empty {
             <div class="empty-column">
