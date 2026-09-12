@@ -5,7 +5,7 @@ export type ThemeMode = 'light' | 'dark';
 const STORAGE_KEY = 'theme';
 
 function prefersDark(): boolean {
-  return matchMedia('(prefers-color-scheme: dark)').matches;
+  return typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 function initialMode(): ThemeMode {
