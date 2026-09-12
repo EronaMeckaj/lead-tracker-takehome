@@ -215,6 +215,7 @@ textarea.input {
   justify-content: center;
   gap: 6px;
   flex: 1 0 0;
+  min-width: 96px;
   min-height: 40px;
   padding: 8px 20px;
   font-size: 14px;
