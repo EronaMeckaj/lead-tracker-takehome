@@ -156,16 +156,49 @@ Render (`generateValue: true`) — no need to set those by hand.
 
 ## What I'd do next / improve with more time
 
-- Full-text/trigram search (`pg_trgm`) instead of plain `ILIKE` — fine at
-  this scale, wouldn't be at real volume.
-- Cursor-based pagination instead of offset, once lists get long.
-- A CI pipeline (lint + unit tests + build) on every push.
-- Automated e2e coverage of a real Google login. `api/test/*.e2e-spec.ts`
-  runs the full lead/webhook/rate-limit flow against real Postgres and
-  Valkey, but authenticated routes there run with `SessionAuthGuard`
-  overridden rather than a live OAuth round trip, since that can't be
-  automated without real Google credentials in CI. The guard's own
-  reject-when-anonymous behavior is covered separately, unmocked.
-- A managed allowlist (admin UI + DB table) instead of a comma-separated
-  `ALLOWED_EMAILS` env var — fine for a small fixed team, not for one
-  that changes often.
+### Scaling and process
+
+- **Trigram search instead of plain `ILIKE`.** `LeadsService.findAll`
+  filters with `ILIKE '%q%'` on `name`/`email`/`message`, which can't use
+  a B-tree index and forces a sequential scan. A `pg_trgm` GIN index on
+  those columns would keep fuzzy substring search fast well past the
+  point where a scan starts showing up in query time.
+- **Cursor-based pagination instead of offset/limit**, once the list view
+  has real volume. `QueryLeadsDto`'s `page`/`limit` becomes `OFFSET n
+  LIMIT m` on every request, which gets linearly slower as `page` grows
+  since Postgres still has to walk past every earlier row. A cursor (the
+  last row's `id`/`created_at`) lets it seek directly via the existing
+  index instead.
+- **A CI pipeline on GitHub Actions**, since nothing here runs
+  automatically today — every check in this project happened from a
+  local terminal. It would run `oxlint`, `npm test`, `npm run test:e2e`
+  (needs Postgres + Valkey service containers, mirroring
+  `docker-compose.yml`), and `nest build` for `api/`; `ng test` and `ng
+  build` for `web/` — on every push, gating merges on all of it passing.
+- **Automated e2e coverage of a real Google login.**
+  `api/test/*.e2e-spec.ts` runs the full lead/webhook/rate-limit flow
+  against real Postgres and Valkey, but authenticated routes there run
+  with `SessionAuthGuard` overridden rather than a live OAuth round trip,
+  since that can't be automated without real Google credentials in CI.
+  The guard's own reject-when-anonymous behavior is covered separately,
+  unmocked.
+
+### Features I'd add next
+
+- **Per-user roles, backing a managed allowlist instead of
+  `ALLOWED_EMAILS`.** Every allowlisted email currently has identical
+  access. An `admin`/`member` role on `User` would split that — members
+  triage leads, admins additionally manage the team — backed by an
+  `allowed_emails` table (`email`, `added_by`, `created_at`) that
+  `GoogleStrategy.isAllowed` queries instead of parsing a comma-separated
+  string, plus a small admin-only screen to add or remove people without
+  touching Render's environment settings or redeploying. The first admin
+  would still need seeding by hand; everyone after that is managed
+  through the UI.
+- **Notes or an activity log per lead.** A lead's `message` is fixed at
+  creation — there's no way today to record what the team actually said
+  or tried afterward. A `lead_notes` table (`lead_id`, `author_id`,
+  `body`, `created_at`) and a small panel on each card/row would turn the
+  pipeline from "what stage is this in" into "what's actually happened
+  with this person" — probably the single feature a team using this
+  daily would ask for first.
