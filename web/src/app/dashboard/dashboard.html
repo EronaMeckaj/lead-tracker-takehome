@@ -1,58 +1,151 @@
-<section class="dashboard">
-  <div class="toolbar">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-icon matPrefix>search</mat-icon>
-      <mat-label>Search name, email, or message</mat-label>
-      <input matInput (input)="onSearchInput($any($event.target).value)" />
-    </mat-form-field>
-    <a class="export-link" [href]="exportCsvUrl">
-      <mat-icon inline>download</mat-icon>
-      Export CSV
-    </a>
+<div class="dashboard">
+  <nav class="nav dashboard-toolbar">
+    <input
+      class="input search-input"
+      type="search"
+      placeholder="Search name, email, or message…"
+      (input)="onSearchInput($event)"
+    />
+
+    <select class="input sort-select" (change)="setSortBy($event)">
+      @for (option of sortOptions; track option) {
+        <option [value]="option" [selected]="sortBy() === option">
+          Sort: {{ option === 'recent' ? 'newest first' : option === 'oldest' ? 'oldest first' : 'name A–Z' }}
+        </option>
+      }
+    </select>
+
+    <div class="seg">
+      <button
+        type="button"
+        class="seg-opt"
+        [class.active]="viewMode() === 'board'"
+        (click)="setViewMode('board')"
+      >
+        Board
+      </button>
+      <button
+        type="button"
+        class="seg-opt"
+        [class.active]="viewMode() === 'list'"
+        (click)="setViewMode('list')"
+      >
+        List
+      </button>
+    </div>
+
+    <a class="btn btn-primary export-link" [href]="exportCsvUrl">Export CSV</a>
+  </nav>
+
+  <div class="dashboard-header">
+    <h2>Pipeline</h2>
+    <span class="total-line">{{ totalLine() }}</span>
+    <span class="hint-line">
+      {{ viewMode() === 'board' ? 'Drag a lead to move it' : 'Change a lead\'s stage inline' }}
+    </span>
   </div>
 
   @if (error()) {
-    <p class="error" role="alert">{{ error() }}</p>
+    <p class="field-error" role="alert">{{ error() }}</p>
   }
 
-  <div class="board">
-    @for (stage of stages; track stage) {
-      <div class="column">
-        <div class="column-header">
-          <span class="column-title">{{ stage }}</span>
-          <span class="column-count">{{ columns()[stage].length }}</span>
-        </div>
+  @if (viewMode() === 'board') {
+    <div class="board">
+      @for (stage of stages; track stage) {
+        <div class="column">
+          <div class="column-header">
+            <span class="column-title">{{ stage }}</span>
+            <span class="column-count">{{ columns()[stage].length }}</span>
+          </div>
 
-        <div
-          class="column-body"
-          cdkDropList
-          [id]="columnId(stage)"
-          [cdkDropListData]="columns()[stage]"
-          [cdkDropListConnectedTo]="connectedColumns(stage)"
-          (cdkDropListDropped)="onDrop($event, stage)"
-        >
-          @for (lead of columns()[stage]; track lead.id) {
-            <div class="lead-card" cdkDrag>
-              <div class="lead-card-accent"></div>
-              <div class="lead-card-body">
+          <div
+            class="column-body"
+            cdkDropList
+            [id]="columnId(stage)"
+            [cdkDropListData]="columns()[stage]"
+            [cdkDropListConnectedTo]="connectedColumns(stage)"
+            (cdkDropListDropped)="onDrop($event, stage)"
+          >
+            @for (lead of columns()[stage]; track lead.id) {
+              <div class="card elev-sm lead-card" cdkDrag [cdkDragData]="lead">
                 <div class="lead-card-header">
-                  <span class="lead-name">{{ lead.name }}</span>
-                  <span class="lead-source" [class.webhook]="lead.source === 'webhook'">
+                  <span class="card-title">{{ lead.name }}</span>
+                  <span class="tag" [class.tag-accent-2]="lead.source === 'webhook'" [class.tag-accent]="lead.source === 'form'">
                     {{ lead.source }}
                   </span>
                 </div>
-                <div class="lead-email">{{ lead.email }}</div>
-                <p class="lead-message">{{ lead.message }}</p>
-                <div class="lead-date">{{ lead.createdAt | date: 'MMM d, y' }}</div>
+                <span class="lead-email">{{ lead.email }}</span>
+                <p class="card-body">{{ lead.message }}</p>
+                <div class="card-meta">{{ lead.createdAt | timeAgo }}</div>
               </div>
-            </div>
-          } @empty {
-            <div class="empty-column">
-              {{ loading() ? 'Loading…' : 'No leads here.' }}
-            </div>
-          }
+            } @empty {
+              <div class="empty-column">
+                {{ loading() ? 'Loading…' : 'Nothing here' }}
+              </div>
+            }
+          </div>
         </div>
+      }
+    </div>
+  } @else {
+    <div class="list-view">
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Message</th>
+              <th>Stage</th>
+              <th>Received</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lead of listRows(); track lead.id) {
+              <tr>
+                <td>
+                  <div class="row-name">{{ lead.name }}</div>
+                  <div class="row-email">{{ lead.email }}</div>
+                </td>
+                <td class="row-message">{{ lead.message }}</td>
+                <td>
+                  <select class="input" [value]="lead.stage" (change)="onListStageChange(lead, $event)">
+                    @for (stage of stages; track stage) {
+                      <option [value]="stage">{{ stage }}</option>
+                    }
+                  </select>
+                </td>
+                <td>{{ lead.createdAt | timeAgo }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty-column">
+                  {{ loading() ? 'Loading…' : 'No leads match your filters.' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-    }
-  </div>
-</section>
+
+      <div class="pagination">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="listPage() <= 1"
+          (click)="goToListPage(listPage() - 1)"
+        >
+          Previous
+        </button>
+        <span>Page {{ listPage() }} of {{ listTotalPages() }}</span>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="listPage() >= listTotalPages()"
+          (click)="goToListPage(listPage() + 1)"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  }
+</div>
