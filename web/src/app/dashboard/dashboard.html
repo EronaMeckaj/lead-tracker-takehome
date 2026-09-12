@@ -1,40 +1,42 @@
 <div class="dashboard">
   <nav class="nav dashboard-toolbar">
-    <input
-      class="input search-input"
-      type="search"
-      placeholder="Search name, email, or message…"
-      (input)="onSearchInput($event)"
-    />
+    <div class="nav-inner">
+      <input
+        class="input search-input"
+        type="search"
+        placeholder="Search name, email, or message…"
+        (input)="onSearchInput($event)"
+      />
 
-    <select class="input sort-select" (change)="setSortBy($event)">
-      @for (option of sortOptions; track option) {
-        <option [value]="option" [selected]="sortBy() === option">
-          Sort: {{ option === 'recent' ? 'newest first' : option === 'oldest' ? 'oldest first' : 'name A–Z' }}
-        </option>
-      }
-    </select>
+      <select class="input sort-select" (change)="setSortBy($event)">
+        @for (option of sortOptions; track option) {
+          <option [value]="option" [selected]="sortBy() === option">
+            Sort: {{ option === 'recent' ? 'newest first' : option === 'oldest' ? 'oldest first' : 'name A–Z' }}
+          </option>
+        }
+      </select>
 
-    <div class="seg">
-      <button
-        type="button"
-        class="seg-opt"
-        [class.active]="viewMode() === 'board'"
-        (click)="setViewMode('board')"
-      >
-        Board
-      </button>
-      <button
-        type="button"
-        class="seg-opt"
-        [class.active]="viewMode() === 'list'"
-        (click)="setViewMode('list')"
-      >
-        List
-      </button>
+      <div class="seg">
+        <button
+          type="button"
+          class="seg-opt"
+          [class.active]="viewMode() === 'board'"
+          (click)="setViewMode('board')"
+        >
+          Board
+        </button>
+        <button
+          type="button"
+          class="seg-opt"
+          [class.active]="viewMode() === 'list'"
+          (click)="setViewMode('list')"
+        >
+          List
+        </button>
+      </div>
+
+      <a class="btn btn-primary export-link" [href]="exportCsvUrl">Export CSV</a>
     </div>
-
-    <a class="btn btn-primary export-link" [href]="exportCsvUrl">Export CSV</a>
   </nav>
 
   <div class="dashboard-header">
