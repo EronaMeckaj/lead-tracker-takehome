@@ -17,8 +17,22 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  googleCallback(@Res() res: Response): void {
-    res.redirect(`${this.configService.getOrThrow<string>('FRONTEND_URL')}/dashboard`);
+  googleCallback(@Req() req: Request, @Res() res: Response): void {
+    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+
+    // AuthGuard('google') validates the profile and sets req.user, but
+    // does not reliably establish the session itself - req.logIn is what
+    // actually serializes the user into the session and saves it to the
+    // store. Without this, the redirect below lands the browser on
+    // /dashboard with no session, and the frontend guard bounces it
+    // straight back to /login.
+    req.logIn(req.user as User, (err) => {
+      if (err) {
+        res.redirect(`${frontendUrl}/login`);
+        return;
+      }
+      res.redirect(`${frontendUrl}/dashboard`);
+    });
   }
 
   @Get('me')
