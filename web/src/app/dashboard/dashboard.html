@@ -110,9 +110,9 @@
                 </td>
                 <td class="row-message">{{ lead.message }}</td>
                 <td>
-                  <select class="input" [value]="lead.stage" (change)="onListStageChange(lead, $event)">
+                  <select class="input" (change)="onListStageChange(lead, $event)">
                     @for (stage of stages; track stage) {
-                      <option [value]="stage">{{ stage }}</option>
+                      <option [value]="stage" [selected]="lead.stage === stage">{{ stage }}</option>
                     }
                   </select>
                 </td>
