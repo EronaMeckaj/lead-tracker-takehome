@@ -1,20 +1,13 @@
-<div class="app-shell">
-  <mat-toolbar class="app-header">
-    <a class="brand" routerLink="/">Lead<span class="brand-slash">/</span>Tracker</a>
+@if (showNav()) {
+  <nav class="nav">
+    <a class="nav-brand" routerLink="/">Lead Tracker</a>
 
-    <span class="spacer"></span>
-
-    <nav class="app-nav">
-      @if (auth.isAuthenticated()) {
-        <a routerLink="/dashboard" class="nav-link">Dashboard</a>
-        <button type="button" class="nav-link nav-button" (click)="signOut()">Sign out</button>
-      } @else {
-        <a mat-stroked-button routerLink="/login" class="nav-cta">Sign in</a>
-      }
-      <app-theme-toggle />
-    </nav>
-  </mat-toolbar>
-  <main>
-    <router-outlet></router-outlet>
-  </main>
-</div>
+    @if (auth.isAuthenticated()) {
+      <a routerLink="/dashboard">Dashboard</a>
+      <button type="button" class="btn btn-ghost" (click)="signOut()">Sign out</button>
+    } @else {
+      <a routerLink="/login">Team login</a>
+    }
+  </nav>
+}
+<router-outlet></router-outlet>
