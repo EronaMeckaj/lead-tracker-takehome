@@ -119,11 +119,15 @@ Render (`generateValue: true`) — no need to set those by hand.
   this scale, wouldn't be at real volume.
 - Cursor-based pagination instead of offset, once lists get long.
 - A CI pipeline (lint + unit tests + build) on every push.
-- More frontend test coverage — the backend has unit tests per feature,
-  the Angular side currently only has the scaffold-level app test.
+- Automated e2e coverage of a real Google login. `api/test/*.e2e-spec.ts`
+  runs the full lead/webhook/rate-limit flow against real Postgres and
+  Valkey, but authenticated routes there run with `SessionAuthGuard`
+  overridden rather than a live OAuth round trip, since that can't be
+  automated without real Google credentials in CI. The guard's own
+  reject-when-anonymous behavior is covered separately, unmocked.
 - Real end-to-end verification against deployed infra with a live Google
-  test account, beyond the build/unit-test/manual-smoke-check level this
-  was verified at during development.
+  test account, beyond the build/test/manual-smoke-check level this was
+  verified at during development.
 - A managed allowlist (admin UI + DB table) instead of a comma-separated
   `ALLOWED_EMAILS` env var — fine for a small fixed team, not for one
   that changes often.

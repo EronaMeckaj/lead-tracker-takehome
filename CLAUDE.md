@@ -54,8 +54,16 @@ Valkey connection strings plus Google OAuth client credentials.
 
 ## Testing
 
-- `api`: `npm test` (unit) and `npm run test:e2e` (Nest's e2e harness against
-  a real Postgres/Valkey via `docker-compose.yml`).
-- `web`: `npm test` (Karma/Jasmine unit tests).
+- `api`: `npm test` (unit, mocked repository/Redis) and `npm run test:e2e`
+  (Vitest against the real Postgres/Valkey from `docker-compose.yml` —
+  covers lead creation/search/stage transitions/CSV export, the webhook's
+  secret check, and rate limiting on both public endpoints). Authenticated
+  routes are exercised with `SessionAuthGuard` overridden rather than a real
+  Google login, which can't be automated without live credentials; the
+  guard's own reject-when-anonymous behavior is covered separately,
+  unmocked. **`test:e2e` truncates the `leads` table and flushes Valkey
+  between tests** — only run it against the disposable local
+  `docker-compose.yml` containers, never a database with real data.
+- `web`: `npm test` (Vitest + Angular's test builder).
 
 Run the relevant suite before committing a change to that app.
