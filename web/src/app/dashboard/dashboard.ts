@@ -2,7 +2,7 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, Signal, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
 import { Lead, LeadStage, Leads } from '../leads/leads';
 import { AppSelect, SelectOption } from '../shared/select/select';
 import { ToastService } from '../shared/toast/toast';
@@ -25,8 +25,12 @@ const STAGE_LABELS: Record<LeadStage, string> = {
   closed: 'Closed',
 };
 
-// Matches the API's @Max(100) on QueryLeadsDto.limit (src/leads/dto/query-leads.dto.ts).
-const BOARD_LIMIT = 100;
+// Fetched per stage, not overall - matches the API's @Max(100) on
+// QueryLeadsDto.limit (src/leads/dto/query-leads.dto.ts). A single shared
+// top-100-across-all-stages fetch would let a busy stage crowd others out
+// of the board entirely; fetching each stage separately gives each column
+// its own ceiling instead of one they all fight over.
+const STAGE_FETCH_LIMIT = 100;
 const LIST_PAGE_SIZE = 20;
 
 type Columns = Record<LeadStage, Lead[]>;
@@ -191,9 +195,13 @@ export class Dashboard {
     this.error.set('');
     this.listPage.set(1);
 
-    this.leadsApi.list({ q: q || undefined, limit: BOARD_LIMIT }).subscribe({
-      next: (result) => {
-        this.leads.set(result.data);
+    forkJoin(
+      this.stages.map((stage) =>
+        this.leadsApi.list({ q: q || undefined, stage, limit: STAGE_FETCH_LIMIT }),
+      ),
+    ).subscribe({
+      next: (results) => {
+        this.leads.set(results.flatMap((result) => result.data));
         this.loading.set(false);
       },
       error: () => {

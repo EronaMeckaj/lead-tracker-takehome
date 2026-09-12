@@ -2,7 +2,7 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { Lead, Leads } from '../leads/leads';
+import { Lead, LeadStage, Leads } from '../leads/leads';
 import { ToastService } from '../shared/toast/toast';
 import { Dashboard } from './dashboard';
 
@@ -32,7 +32,13 @@ describe('Dashboard', () => {
 
   function setup(leads: Lead[]): void {
     leadsApi = {
-      list: vi.fn().mockReturnValue(of({ data: leads, total: leads.length, page: 1, limit: 100 })),
+      // Dashboard now fetches one page per stage (see STAGE_FETCH_LIMIT in
+      // dashboard.ts) rather than one shared top-N fetch, so the mock has
+      // to filter by stage the way the real API does.
+      list: vi.fn((params: { stage?: LeadStage }) => {
+        const data = leads.filter((lead) => !params.stage || lead.stage === params.stage);
+        return of({ data, total: data.length, page: 1, limit: 100 });
+      }),
       updateStage: vi.fn(),
       exportCsvUrl: vi.fn().mockReturnValue('http://api.example.com/leads/export.csv'),
     };
@@ -52,7 +58,9 @@ describe('Dashboard', () => {
   it('loads leads on init and groups them into board columns by stage', () => {
     setup([makeLead({ id: '1', stage: 'new' }), makeLead({ id: '2', stage: 'contacted' })]);
 
-    expect(leadsApi.list).toHaveBeenCalledWith({ q: undefined, limit: 100 });
+    expect(leadsApi.list).toHaveBeenCalledWith({ q: undefined, stage: 'new', limit: 100 });
+    expect(leadsApi.list).toHaveBeenCalledWith({ q: undefined, stage: 'contacted', limit: 100 });
+    expect(leadsApi.list).toHaveBeenCalledWith({ q: undefined, stage: 'closed', limit: 100 });
     expect(component['columns']().new).toHaveLength(1);
     expect(component['columns']().contacted).toHaveLength(1);
     expect(component['columns']().closed).toHaveLength(0);
@@ -68,7 +76,7 @@ describe('Dashboard', () => {
       vi.advanceTimersByTime(300);
       fixture.detectChanges();
 
-      expect(leadsApi.list).toHaveBeenCalledWith({ q: 'ada', limit: 100 });
+      expect(leadsApi.list).toHaveBeenCalledWith({ q: 'ada', stage: 'new', limit: 100 });
     } finally {
       vi.useRealTimers();
     }
