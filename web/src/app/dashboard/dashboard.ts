@@ -4,12 +4,19 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Lead, LeadStage, Leads } from '../leads/leads';
+import { AppSelect, SelectOption } from '../shared/select/select';
 import { TimeAgoPipe } from './time-ago';
 
 const STAGES: LeadStage[] = ['new', 'contacted', 'closed'];
 const SORT_OPTIONS = ['recent', 'oldest', 'name'] as const;
 type SortBy = (typeof SORT_OPTIONS)[number];
 type ViewMode = 'board' | 'list';
+
+const SORT_LABELS: Record<SortBy, string> = {
+  recent: 'Sort: newest first',
+  oldest: 'Sort: oldest first',
+  name: 'Sort: name A–Z',
+};
 
 // Matches the API's @Max(100) on QueryLeadsDto.limit (src/leads/dto/query-leads.dto.ts).
 const BOARD_LIMIT = 100;
@@ -19,7 +26,7 @@ type Columns = Record<LeadStage, Lead[]>;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DragDropModule, FormsModule, TimeAgoPipe],
+  imports: [DragDropModule, FormsModule, TimeAgoPipe, AppSelect],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,7 +36,14 @@ export class Dashboard {
   private readonly searchInput$ = new Subject<string>();
 
   protected readonly stages = STAGES;
-  protected readonly sortOptions = SORT_OPTIONS;
+  protected readonly sortSelectOptions: SelectOption<SortBy>[] = SORT_OPTIONS.map((value) => ({
+    value,
+    label: SORT_LABELS[value],
+  }));
+  protected readonly stageSelectOptions: SelectOption<LeadStage>[] = STAGES.map((value) => ({
+    value,
+    label: value,
+  }));
   protected readonly exportCsvUrl = this.leadsApi.exportCsvUrl();
 
   protected readonly leads = signal<Lead[]>([]);
@@ -88,14 +102,9 @@ export class Dashboard {
     this.viewMode.set(mode);
   }
 
-  setSortBy(event: Event): void {
-    this.sortBy.set((event.target as HTMLSelectElement).value as SortBy);
+  setSortBy(sortBy: SortBy): void {
+    this.sortBy.set(sortBy);
     this.listPage.set(1);
-  }
-
-  onListStageChange(lead: Lead, event: Event): void {
-    const stage = (event.target as HTMLSelectElement).value as LeadStage;
-    this.changeStage(lead, stage);
   }
 
   columnId(stage: LeadStage): string {
@@ -121,7 +130,7 @@ export class Dashboard {
     this.listPage.set(page);
   }
 
-  private changeStage(lead: Lead, stage: LeadStage): void {
+  protected changeStage(lead: Lead, stage: LeadStage): void {
     const previousStage = lead.stage;
     this.leads.update((current) =>
       current.map((l) => (l.id === lead.id ? { ...l, stage } : l)),

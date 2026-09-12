@@ -8,13 +8,13 @@
         (input)="onSearchInput($event)"
       />
 
-      <select class="input sort-select" (change)="setSortBy($event)">
-        @for (option of sortOptions; track option) {
-          <option [value]="option" [selected]="sortBy() === option">
-            Sort: {{ option === 'recent' ? 'newest first' : option === 'oldest' ? 'oldest first' : 'name A–Z' }}
-          </option>
-        }
-      </select>
+      <app-select
+        class="sort-select"
+        [options]="sortSelectOptions"
+        [value]="sortBy()"
+        ariaLabel="Sort leads"
+        (valueChange)="setSortBy($event)"
+      ></app-select>
 
       <div class="seg">
         <button
@@ -110,11 +110,12 @@
                 </td>
                 <td class="row-message">{{ lead.message }}</td>
                 <td>
-                  <select class="input" (change)="onListStageChange(lead, $event)">
-                    @for (stage of stages; track stage) {
-                      <option [value]="stage" [selected]="lead.stage === stage">{{ stage }}</option>
-                    }
-                  </select>
+                  <app-select
+                    [options]="stageSelectOptions"
+                    [value]="lead.stage"
+                    [ariaLabel]="'Change stage for ' + lead.name"
+                    (valueChange)="changeStage(lead, $event)"
+                  ></app-select>
                 </td>
                 <td>{{ lead.createdAt | timeAgo }}</td>
               </tr>

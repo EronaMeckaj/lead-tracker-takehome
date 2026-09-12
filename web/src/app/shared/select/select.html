@@ -1,0 +1,29 @@
+<div class="app-select">
+  <button
+    type="button"
+    class="input app-select-trigger"
+    [attr.aria-expanded]="open()"
+    [attr.aria-label]="ariaLabel() || null"
+    (click)="toggle()"
+    (keydown)="onTriggerKeydown($event)"
+  >
+    <span class="app-select-value">{{ selectedLabel() }}</span>
+    <span class="app-select-caret" aria-hidden="true">▾</span>
+  </button>
+
+  @if (open()) {
+    <ul class="app-select-menu scroll-thin" role="listbox">
+      @for (option of options(); track option.value) {
+        <li
+          role="option"
+          class="app-select-option"
+          [class.active]="option.value === value()"
+          [attr.aria-selected]="option.value === value()"
+          (click)="select(option.value)"
+        >
+          {{ option.label }}
+        </li>
+      }
+    </ul>
+  }
+</div>
