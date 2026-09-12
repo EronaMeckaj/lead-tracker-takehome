@@ -1,27 +1,17 @@
 <div class="login-page">
-  <div class="login-pane">
-    <div>
-      <span class="brand">Lead Tracker</span>
-      <h1>Sign in to the pipeline.</h1>
-      <hr class="hr" />
-      <p class="lede">
-        Team access only. Enquiries arrive from the public form and are worked here.
-      </p>
-    </div>
+  <div class="login-glow" aria-hidden="true"></div>
 
-    <div class="signin">
-      <a class="btn btn-secondary btn-block google-btn" [href]="loginUrl">
-        <span class="google-badge">G</span>
-        Continue with Google
-      </a>
-      <p class="fine-print">Single sign-on only — no passwords to keep.</p>
-    </div>
-  </div>
-
-  <div class="accent-pane">
-    <span class="accent-kicker">Pipeline</span>
-    <p class="accent-copy">
-      Drag a lead across New, Contacted and Closed. Everything else is search.
+  <div class="card elev-lg login-card">
+    <span class="brand">Lead Tracker</span>
+    <h1>Sign in to the pipeline.</h1>
+    <p class="lede">
+      Team access only. Enquiries arrive from the public form and are worked here.
     </p>
+
+    <a class="btn btn-secondary btn-block google-btn" [href]="loginUrl">
+      <span class="google-badge">G</span>
+      Continue with Google
+    </a>
+    <p class="fine-print">Single sign-on only — no passwords to keep.</p>
   </div>
 </div>
