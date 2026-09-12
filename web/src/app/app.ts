@@ -3,9 +3,10 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Auth } from './auth/auth';
+import { ToastContainer } from './shared/toast/toast-container';
 
 @Component({
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, ToastContainer],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',

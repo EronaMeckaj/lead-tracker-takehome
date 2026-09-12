@@ -1,0 +1,19 @@
+@if (toastService.toasts().length) {
+  <div class="toast-stack" role="status" aria-live="polite">
+    @for (toast of toastService.toasts(); track toast.id) {
+      <div class="toast">
+        <span class="toast-bar" aria-hidden="true"></span>
+        <span class="toast-message">{{ toast.message }}</span>
+        @if (toast.actionLabel) {
+          <button
+            type="button"
+            class="btn btn-ghost toast-action"
+            (click)="toastService.runAction(toast)"
+          >
+            {{ toast.actionLabel }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+}

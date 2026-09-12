@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Lead, LeadStage, Leads } from '../leads/leads';
 import { AppSelect, SelectOption } from '../shared/select/select';
+import { ToastService } from '../shared/toast/toast';
 import { TimeAgoPipe } from './time-ago';
 
 const STAGES: LeadStage[] = ['new', 'contacted', 'closed'];
@@ -16,6 +17,12 @@ const SORT_LABELS: Record<SortBy, string> = {
   recent: 'Sort: newest first',
   oldest: 'Sort: oldest first',
   name: 'Sort: name A–Z',
+};
+
+const STAGE_LABELS: Record<LeadStage, string> = {
+  new: 'New',
+  contacted: 'Contacted',
+  closed: 'Closed',
 };
 
 // Matches the API's @Max(100) on QueryLeadsDto.limit (src/leads/dto/query-leads.dto.ts).
@@ -33,6 +40,7 @@ type Columns = Record<LeadStage, Lead[]>;
 })
 export class Dashboard {
   private readonly leadsApi = inject(Leads);
+  private readonly toast = inject(ToastService);
   private readonly searchInput$ = new Subject<string>();
 
   protected readonly stages = STAGES;
@@ -130,17 +138,30 @@ export class Dashboard {
     this.listPage.set(page);
   }
 
-  protected changeStage(lead: Lead, stage: LeadStage): void {
-    const previousStage = lead.stage;
-    this.leads.update((current) =>
-      current.map((l) => (l.id === lead.id ? { ...l, stage } : l)),
-    );
+  protected changeStage(lead: Lead, stage: LeadStage, notify = true): void {
+    // Looked up fresh rather than trusting `lead.stage`, since a queued
+    // Undo action targets a lead that has since moved on again.
+    const current = this.leads().find((l) => l.id === lead.id);
+    const previousStage = current?.stage ?? lead.stage;
+    if (previousStage === stage) {
+      return;
+    }
+
+    this.leads.update((list) => list.map((l) => (l.id === lead.id ? { ...l, stage } : l)));
 
     this.leadsApi.updateStage(lead.id, stage).subscribe({
+      next: () => {
+        if (notify) {
+          this.toast.show(`${lead.name} → ${STAGE_LABELS[stage]}`, {
+            actionLabel: 'Undo',
+            onAction: () => this.changeStage(lead, previousStage, false),
+          });
+        }
+      },
       error: () => {
         this.error.set('Could not move that lead. Please try again.');
-        this.leads.update((current) =>
-          current.map((l) => (l.id === lead.id ? { ...l, stage: previousStage } : l)),
+        this.leads.update((list) =>
+          list.map((l) => (l.id === lead.id ? { ...l, stage: previousStage } : l)),
         );
       },
     });
