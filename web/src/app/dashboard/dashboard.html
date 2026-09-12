@@ -1,39 +1,10 @@
 <section class="dashboard">
-  <header class="dashboard-header">
-    <div>
-      @if (currentUser(); as user) {
-        <span class="greeting">Signed in as {{ user.name }}</span>
-      }
-    </div>
-    <button type="button" class="link-button" (click)="logout()">Sign out</button>
-  </header>
-
   <div class="toolbar">
     <input
       type="search"
       placeholder="Search name, email, or message…"
       (input)="onSearchInput($any($event.target).value)"
     />
-
-    <div class="stage-tabs">
-      <button
-        type="button"
-        [class.active]="stageFilter() === ''"
-        (click)="setStageFilter('')"
-      >
-        All
-      </button>
-      @for (stage of stages; track stage) {
-        <button
-          type="button"
-          [class.active]="stageFilter() === stage"
-          (click)="setStageFilter(stage)"
-        >
-          {{ stage }}
-        </button>
-      }
-    </div>
-
     <a class="export-link" [href]="exportCsvUrl">Export CSV</a>
   </div>
 
@@ -41,49 +12,41 @@
     <p class="error" role="alert">{{ error() }}</p>
   }
 
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Message</th>
-        <th>Stage</th>
-        <th>Received</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (lead of leads(); track lead.id) {
-        <tr>
-          <td>{{ lead.name }}</td>
-          <td>{{ lead.email }}</td>
-          <td class="message-cell">{{ lead.message }}</td>
-          <td>
-            <select
-              [ngModel]="lead.stage"
-              (ngModelChange)="moveStage(lead, $event)"
-            >
-              @for (stage of stages; track stage) {
-                <option [value]="stage">{{ stage }}</option>
-              }
-            </select>
-          </td>
-          <td>{{ lead.createdAt | date: 'medium' }}</td>
-        </tr>
-      } @empty {
-        <tr>
-          <td colspan="5" class="empty-state">
-            {{ loading() ? 'Loading…' : 'No leads match your filters.' }}
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
+  <div class="board">
+    @for (stage of stages; track stage) {
+      <div class="column">
+        <div class="column-header">
+          <span class="column-title">{{ stage }}</span>
+          <span class="column-count">{{ columns()[stage].length }}</span>
+        </div>
 
-  <div class="pagination">
-    <button type="button" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">Previous</button>
-    <span>Page {{ page() }} of {{ totalPages }}</span>
-    <button type="button" [disabled]="page() >= totalPages" (click)="goToPage(page() + 1)">
-      Next
-    </button>
+        <div
+          class="column-body"
+          cdkDropList
+          [id]="columnId(stage)"
+          [cdkDropListData]="columns()[stage]"
+          [cdkDropListConnectedTo]="connectedColumns(stage)"
+          (cdkDropListDropped)="onDrop($event, stage)"
+        >
+          @for (lead of columns()[stage]; track lead.id) {
+            <div class="lead-card" cdkDrag>
+              <div class="lead-card-header">
+                <span class="lead-name">{{ lead.name }}</span>
+                <span class="lead-source" [class.webhook]="lead.source === 'webhook'">
+                  {{ lead.source }}
+                </span>
+              </div>
+              <div class="lead-email">{{ lead.email }}</div>
+              <p class="lead-message">{{ lead.message }}</p>
+              <div class="lead-date">{{ lead.createdAt | date: 'MMM d, y' }}</div>
+            </div>
+          } @empty {
+            <div class="empty-column">
+              {{ loading() ? 'Loading…' : 'No leads here.' }}
+            </div>
+          }
+        </div>
+      </div>
+    }
   </div>
 </section>
