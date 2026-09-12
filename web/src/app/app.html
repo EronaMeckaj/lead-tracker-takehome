@@ -1,6 +1,15 @@
 <div class="app-shell">
   <header class="app-header">
-    <span class="brand">Lead Tracker</span>
+    <a class="brand" routerLink="/">Lead Tracker</a>
+
+    <nav class="app-nav">
+      @if (auth.isAuthenticated()) {
+        <a routerLink="/dashboard">Dashboard</a>
+        <button type="button" class="nav-button" (click)="signOut()">Sign out</button>
+      } @else {
+        <a routerLink="/login" class="nav-cta">Sign in</a>
+      }
+    </nav>
   </header>
   <main>
     <router-outlet></router-outlet>
